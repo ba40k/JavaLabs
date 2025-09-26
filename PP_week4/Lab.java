@@ -1,6 +1,7 @@
 import java.text.ParseException;
 import java.util.function.Consumer;
 import java.util.ArrayList;
+import java.util.Scanner;
 class QueryFormatException extends Exception{
     public QueryFormatException(String msg){
         super(msg);
@@ -48,11 +49,46 @@ class BinarySearchTree<T extends  Parsable & Comparable<T>>{
     public BinarySearchTree(){
         root = null;
     }
-    public void executeInsertQuery(){
-    
+    public void executeInsertQuery(T value){
+        Node cur = root;
+        Node prev = null;
+        boolean direction = false;
+        while (cur != null){
+            prev = cur;
+            int diff = cur.getKey().compareTo(value);
+            if (diff == 0) return;
+            if (diff>0){
+                cur = cur.getLeftChild();
+                direction = false;
+            } else {
+                cur = cur.getRightChild();
+                direction = true;
+            }
+            
+        }
+        if (direction == false){
+            prev.setLeftChild(new Node(value));
+            prev.getLeftChild().setIsLeftChild(true);
+        } else {
+            prev.setRightChild(new Node(value));
+            prev.getRightChild().setIsLeftChild(false);
+        }
+        
     }
-    public void executeSearchQuery(){
-    
+    public boolean executeSearchQuery(T value){
+        Node cur = root;
+        while (cur != null){
+            int diff = cur.getKey().compareTo(value); 
+            if (diff == 0){
+                return true;
+            }
+            if (diff < 0){
+                cur = cur.getRightChild();
+            } else{
+                cur = cur.getLeftChild();
+            }
+        }
+        return false;
     }
     public void executeDeleteQuery(){
     
@@ -116,13 +152,17 @@ class TraversalFactory<T extends Parsable & Comparable<T>>{
         switch (inputContent){
             case "left-right-vertex":
                 return new LeftRightCurrentTraversal<>();
+            case "left-vertex-right":
+                return new LeftCurrentRightTraversal<>();
+            case "vertex-left-right":
+                return new CurrentLeftRightTraversal<>();
             default:
                 throw new QueryFormatException("Worng traversal type!");
         }
     }
 }
 interface BinarySearchTreeCommand<T extends Parsable & Comparable<T>> {
-    void execute(BinarySearchTree<T> tree);
+    void execute(BinarySearchTree<T> tree) throws QueryFormatException ;
 }
 class Query<T extends Parsable & Comparable<T>> implements BinarySearchTreeCommand<T>{
     private String content;
@@ -148,7 +188,7 @@ class Query<T extends Parsable & Comparable<T>> implements BinarySearchTreeComma
         initQueryType(inputContent);
         initQueryContent(inputContent);
     }
-    public void execute(BinarySearchTree<T> tree){
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
         
     }
 }
@@ -157,8 +197,10 @@ class InsertQuery<T extends Parsable & Comparable<T>> extends Query<T>{
         super(inputContent);
     }   
     @Override
-    public void execute(BinarySearchTree<T> tree){
-        tree.executeInsertQuery();
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
+        //T val;
+        //val.fromString(getContent());
+        //tree.executeInsertQuery(val);
     }
 }
 class DeleteQuery<T extends Parsable & Comparable<T>> extends Query<T>{
@@ -166,7 +208,7 @@ class DeleteQuery<T extends Parsable & Comparable<T>> extends Query<T>{
         super(inputContent);
     }
     @Override
-    public void execute(BinarySearchTree<T> tree){
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
         tree.executeDeleteQuery();
     }    
 }
@@ -175,8 +217,8 @@ class SearchQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
         super(inputContent);
     }
     @Override
-    public void execute(BinarySearchTree<T> tree){
-        tree.executeSearchQuery();
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
+      //  System.out.println(tree.executeSearchQuery(val));
     }    
 }    
 class TraversalQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
@@ -184,24 +226,42 @@ class TraversalQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
         super(inputContent);
     }
     @Override
-    public void execute(BinarySearchTree<T> tree){
-        //smthng
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException{
+        TraversalFactory<T> factory = new TraversalFactory<>();
+        ArrayList<BinarySearchTree<T>.Node> res =  tree.executeTraversalQuery(factory.constructTraversal(getContent())); 
+        System.out.println(res);
     }    
 }
 
-
+class Demonstrator<T extends Parsable & Comparable<T>>{
+     private QueryFactory<T> queryFactory;
+     private Query<T> readQuery(Scanner in) throws QueryFormatException {
+         return queryFactory.constructQuery(in.nextLine());
+     }
+     private void processQueries() throws QueryFormatException {
+        BinarySearchTree<T> tree = new BinarySearchTree<>();
+        Scanner in = new Scanner(System.in);
+        while(in.hasNext()){
+           readQuery(in).execute(tree);
+        }
+    }
+    public Demonstrator() {
+        queryFactory = new QueryFactory<>();
+    }
+    public void demonstrateLab() throws QueryFormatException {
+        
+    }
+}
 public class Lab{
-    public static Query readNextQuery(){
-        return null; // заглушка
-    }
-    public static void processQueries(){
-    
-    }
     public static void executeLab(){
-    
+        
     }
     public static void main(String[] args){    
     }
 }
+
+
+
+
 
 
