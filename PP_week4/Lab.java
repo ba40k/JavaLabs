@@ -23,16 +23,15 @@ class ParametrizedInstanseFactory<T extends Comparable<T>>{
     }
 }
 class BinarySearchTree<T extends  Comparable<T>>{
-    // пока что класс пустой просто для примера
     class Node {
         private T key;
         private Node leftChild, rightChild;
-        private Node previous;
-        private boolean isLeftChild;
+        private Boolean deleted;
         public Node(T inputKey){
             key = inputKey;
             leftChild = null;
             rightChild = null;
+            deleted = false;
         }
         public T getKey(){
             return key;
@@ -49,11 +48,16 @@ class BinarySearchTree<T extends  Comparable<T>>{
         public void setRightChild(Node child){
             rightChild = child;
         }
-        public boolean isItLeftChild(){
-            return isLeftChild;
+        public boolean isDeleted(){
+           return deleted;
         }
-        public void setIsLeftChild(boolean value){
-             isLeftChild = value;
+        public void setDeleted(){
+           deleted = true;
+        }
+        public void  executeLazyDelete(){
+           if (getLeftChild()!=null && getLeftChild().isDeleted() == true)     setLeftChild(null);
+           if (getRightChild()!=null && getRightChild().isDeleted() == true)     setRightChild(null);
+ 
         }
     }
     private Node root;
@@ -62,37 +66,37 @@ class BinarySearchTree<T extends  Comparable<T>>{
         root = null;
     }
     public void executeInsertQuery(T value){
+        if (root == null  || root.isDeleted()){
+            root = new Node(value);
+        }
         Node cur = root;
         Node prev = null;
-        boolean direction = false;
-        while (cur != null){
+        while (cur.getLeftChild() != null || cur.getRightChild() != null){
+            cur.executeLazyDelete();
             prev = cur;
             int diff = cur.getKey().compareTo(value);
             if (diff == 0) return;
             if (diff>0){
                 cur = cur.getLeftChild();
-                direction = false;
             } else {
                 cur = cur.getRightChild();
-                direction = true;
             }
-            
         }
-        if (direction == false){
-            prev.setLeftChild(new Node(value));
-            prev.getLeftChild().setIsLeftChild(true);
-        } else {
-            prev.setRightChild(new Node(value));
-            prev.getRightChild().setIsLeftChild(false);
-        }
-        
+        int diff = cur.getKey().compareTo(value);
+        if (diff == 0) return;
+            if (diff>0){
+                cur.setLeftChild(new Node(value));
+            } else {
+                cur.setRightChild(new Node(value));
+         }       
     }
-    public boolean executeSearchQuery(T value){
+    public Node executeSearchQuery(T value){
         Node cur = root;
         while (cur != null){
+            cur.executeLazyDelete();
             int diff = cur.getKey().compareTo(value); 
             if (diff == 0){
-                return true;
+                return cur;
             }
             if (diff < 0){
                 cur = cur.getRightChild();
@@ -100,10 +104,30 @@ class BinarySearchTree<T extends  Comparable<T>>{
                 cur = cur.getLeftChild();
             }
         }
-        return false;
+        return null;
     }
-    public void executeDeleteQuery(){
-    
+    private void  swapKeys(Node a, Node b){
+        T tempKey = a.key;
+        a.key = b.key;
+        b.key = tempKey;
+    }
+    private Node findReplacement(Node node){
+        node.executeLazyDelete();
+        if (node.getRightChild() == null) return node;
+        node = node.getRightChild();
+        node.executeLazyDelete();
+        while (node.getLeftChild()!=null){
+            node = node.getLeftChild();
+            node.executeLazyDelete();
+        }
+        return node;
+    }
+    public void executeDeleteQuery(T value){
+        Node toDelete = executeSearchQuery(value);
+        if (toDelete == null) return;
+        Node replacement = findReplacement(toDelete);
+        swapKeys(toDelete, replacement);
+        replacement.setDeleted();
     }
     public ArrayList<Node> executeTraversalQuery(TraversalStrategy<T> strategy){
         ArrayList<Node> res = new ArrayList<>();
@@ -117,7 +141,8 @@ interface TraversalStrategy<T extends  Comparable<T>>{
 }
 class LeftRightCurrentTraversal<T extends  Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
-        if (vertex == null) return;
+        if (vertex == null || vertex.isDeleted()) return;
+        vertex.executeLazyDelete();
         traverse(vertex.getLeftChild(), action);
         traverse(vertex.getRightChild(), action);
         action.accept(vertex);
@@ -125,7 +150,8 @@ class LeftRightCurrentTraversal<T extends  Comparable<T>> implements TraversalSt
 }
 class LeftCurrentRightTraversal<T extends Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
-        if (vertex == null) return;
+        if (vertex == null  || vertex.isDeleted()) return;
+        vertex.executeLazyDelete();
         traverse(vertex.getLeftChild(), action);
         action.accept(vertex);
         traverse(vertex.getRightChild(), action);
@@ -134,7 +160,8 @@ class LeftCurrentRightTraversal<T extends Comparable<T>> implements TraversalStr
 
 class CurrentLeftRightTraversal<T extends   Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
-        if (vertex == null) return;
+        if (vertex == null || vertex.isDeleted()) return;
+        vertex.executeLazyDelete();
         action.accept(vertex); 
         traverse(vertex.getLeftChild(), action);
         traverse(vertex.getRightChild(), action);
@@ -169,7 +196,7 @@ class TraversalFactory<T extends Comparable<T>>{
             case "vertex-left-right":
                 return new CurrentLeftRightTraversal<>();
             default:
-                throw new QueryFormatException("Worng traversal type!");
+                throw new QueryFormatException("Wrong traversal type!");
         }
     }
 }
@@ -214,6 +241,7 @@ class InsertQuery<T extends  Comparable<T>> extends Query<T>{
     public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException {
         //we need to create T var from content in query and ask Tree to perform operation
         tree.executeInsertQuery(getParsedContent());
+        System.out.println(getContent() + " was inserted");
         
     }
 }
@@ -223,7 +251,8 @@ class DeleteQuery<T extends  Comparable<T>> extends Query<T>{
     }
     @Override
     public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException {
-        tree.executeDeleteQuery();
+        tree.executeDeleteQuery(getParsedContent());
+        System.out.println(getContent() + " was deleted");
     }    
 }
 class SearchQuery<T extends  Comparable<T>> extends Query<T>{
@@ -232,7 +261,12 @@ class SearchQuery<T extends  Comparable<T>> extends Query<T>{
     }
     @Override
     public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException {
-      //  System.out.println(tree.executeSearchQuery(val));
+        System.out.print("Searching for: " + getContent() + "\nresult: ");
+        if (tree.executeSearchQuery(getParsedContent())!=null){
+            System.out.println("Element found");
+        } else {
+            System.out.println("Element not found");
+        }
     }    
 }    
 class TraversalQuery<T extends Comparable<T>> extends Query<T>{
@@ -281,13 +315,29 @@ class Demonstrator<T extends  Comparable<T>, E extends FromStringParser<T>>{
          processQueries();
     }
 }
+class IntegerParser implements FromStringParser<Integer>{
+    public Integer fromString(String source) throws ParseException{
+        return Integer.parseInt(source);
+    }
+}
 public class Lab{
     
-    private static void executeLab(String args[]){
-       // Demostrator demostrator = new Demonstrator();
+    private static void executeLab(String args[]) throws ParseException, QueryFormatException, FileNotFoundException, IOException{
+        Demonstrator<Integer, IntegerParser> demonstrator = new Demonstrator<>(args, new IntegerParser());
+        demonstrator.demonstrateLab();
     }
     public static void main(String[] args){    
-        
+        try{
+            executeLab(args);      
+        } catch(ParseException e){
+           System.out.println(e.getMessage());
+        } catch (QueryFormatException e){
+           System.out.println(e.getMessage());
+        } catch (FileNotFoundException e){
+           System.out.println(e.getMessage());
+        } catch (IOException e){
+           System.out.println(e.getMessage());
+        }
     }
 }
 

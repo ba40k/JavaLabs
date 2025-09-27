@@ -1,0 +1,10 @@
+insert 5
+insert 7
+insert 10
+search 5
+delete 5
+search 5
+delete 10
+search 5
+search 10
+search 7
