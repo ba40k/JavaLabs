@@ -1,0 +1,5 @@
+insert Радомир 18
+delete Радомир 18
+delete Радомир 17
+insert Радомир 17
+traversal left-vertex-right
