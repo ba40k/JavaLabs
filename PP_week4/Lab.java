@@ -335,10 +335,41 @@ class IntegerParser implements FromStringParser<Integer>{
         }
       }
 }
+class Human implements Comparable<Human>{
+    private String name;
+    private Integer age;
+    public Human(String name, int age){
+        this.name = name;
+        this.age = age;
+    }
+    @Override
+    public int compareTo(Human other){
+        if (name.compareTo(other.name) == 0){
+            return age.compareTo(other.age);
+        }
+        return name.compareTo(other.name);
+    }
+    @Override
+    public String toString(){
+        return "{" + name +", " + Integer.toString(age)+"}";
+    }
+}
+class HumanParser implements FromStringParser<Human>{
+    public Human fromString(String source) throws ParseException{
+        try{
+            return new Human(source.substring(0,source.indexOf(' ')), Integer.parseInt(source.substring(source.indexOf(' ') + 1)));
+        } catch (NumberFormatException e){
+            throw new ParseException("Wrong Human age format!",-1);
+        } catch  (IndexOutOfBoundsException e){
+            throw new ParseException("Wrong Human format!", -1);
+        }
+    }
+}
 public class Lab{
     
     private static void executeLab(String args[]) throws ParseException, QueryFormatException, FileNotFoundException, IOException{
-        Demonstrator<Integer, IntegerParser> demonstrator = new Demonstrator<>(args, new IntegerParser());
+       // Demonstrator<Integer, IntegerParser> demonstrator = new Demonstrator<>(args, new IntegerParser());
+        Demonstrator<Human, HumanParser> demonstrator = new Demonstrator<>(args, new HumanParser());
         demonstrator.demonstrateLab();
     }
     public static void main(String[] args){    

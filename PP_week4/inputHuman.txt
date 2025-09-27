@@ -1,0 +1,7 @@
+insert Радомир 18
+insert Кирилл 20
+insert Вова 17
+traversal left-vertex-right
+search Радомир 18
+search Радомир 17
+
