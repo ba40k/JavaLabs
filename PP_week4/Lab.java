@@ -13,7 +13,7 @@ class QueryFormatException extends Exception{
 interface FromStringParser<T>{
     T fromString(String source) throws ParseException;
 }
-class ParametrizedInstanseFactory<T extends FromStringParser<T> & Comparable<T>>{
+class ParametrizedInstanseFactory<T extends Comparable<T>>{
     private final FromStringParser<T> parser;
     public ParametrizedInstanseFactory(FromStringParser<T> parser){
         this.parser = parser;
@@ -22,7 +22,7 @@ class ParametrizedInstanseFactory<T extends FromStringParser<T> & Comparable<T>>
         return parser.fromString(source);
     }
 }
-class BinarySearchTree<T extends  FromStringParser<T> & Comparable<T>>{
+class BinarySearchTree<T extends  Comparable<T>>{
     // пока что класс пустой просто для примера
     class Node {
         private T key;
@@ -112,10 +112,10 @@ class BinarySearchTree<T extends  FromStringParser<T> & Comparable<T>>{
     }
     
 }
-interface TraversalStrategy<T extends FromStringParser<T> & Comparable<T>>{
+interface TraversalStrategy<T extends  Comparable<T>>{
     void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action);
 }
-class LeftRightCurrentTraversal<T extends FromStringParser<T> & Comparable<T>> implements TraversalStrategy<T>{
+class LeftRightCurrentTraversal<T extends  Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
         if (vertex == null) return;
         traverse(vertex.getLeftChild(), action);
@@ -123,7 +123,7 @@ class LeftRightCurrentTraversal<T extends FromStringParser<T> & Comparable<T>> i
         action.accept(vertex);
     }
 }
-class LeftCurrentRightTraversal<T extends FromStringParser<T> & Comparable<T>> implements TraversalStrategy<T>{
+class LeftCurrentRightTraversal<T extends Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
         if (vertex == null) return;
         traverse(vertex.getLeftChild(), action);
@@ -132,7 +132,7 @@ class LeftCurrentRightTraversal<T extends FromStringParser<T> & Comparable<T>> i
     }
 }
 
-class CurrentLeftRightTraversal<T extends  FromStringParser<T> & Comparable<T>> implements TraversalStrategy<T>{
+class CurrentLeftRightTraversal<T extends   Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
         if (vertex == null) return;
         action.accept(vertex); 
@@ -142,24 +142,24 @@ class CurrentLeftRightTraversal<T extends  FromStringParser<T> & Comparable<T>> 
 }
 
 
-class QueryFactory <T extends  FromStringParser<T> & Comparable<T>>{
-    public Query<T> constructQuery(String inputContent) throws QueryFormatException{
-        Query<T> abstractQuery = new Query<>(inputContent);
+class QueryFactory <T extends   Comparable<T>>{
+    public Query<T> constructQuery(String inputContent, ParametrizedInstanseFactory<T> contentFactory) throws QueryFormatException{
+        Query<T> abstractQuery = new Query<>(inputContent, contentFactory);
         switch (abstractQuery.getType()){
             case "insert":
-                return new InsertQuery<>(inputContent);
+                return new InsertQuery<>(inputContent, contentFactory);
             case "delete":
-                return new DeleteQuery<>(inputContent);
+                return new DeleteQuery<>(inputContent, contentFactory);
             case "search":
-                return new SearchQuery<>(inputContent);
+                return new SearchQuery<>(inputContent, contentFactory);
             case "traversal":
-                return new TraversalQuery<>(inputContent);
+                return new TraversalQuery<>(inputContent, contentFactory);
             default:
                 throw new QueryFormatException("Wrong query type!");
         }
     }
 }
-class TraversalFactory<T extends FromStringParser<T> & Comparable<T>>{
+class TraversalFactory<T extends Comparable<T>>{
     public TraversalStrategy<T> constructTraversal(String inputContent) throws QueryFormatException{
         switch (inputContent){
             case "left-right-vertex":
@@ -173,12 +173,10 @@ class TraversalFactory<T extends FromStringParser<T> & Comparable<T>>{
         }
     }
 }
-interface BinarySearchTreeCommand<T extends FromStringParser<T> & Comparable<T>> {
-    void execute(BinarySearchTree<T> tree) throws QueryFormatException ;
-}
-class Query<T extends FromStringParser<T> & Comparable<T>> implements BinarySearchTreeCommand<T>{
+class Query<T extends  Comparable<T>>{
     private String content;
     private String type;
+    private ParametrizedInstanseFactory<T> contentFactory;
     private void initQueryType(String inputContent) throws QueryFormatException{
         int left = 0;
         int right = inputContent.indexOf(' ');
@@ -196,67 +194,77 @@ class Query<T extends FromStringParser<T> & Comparable<T>> implements BinarySear
     public String getContent(){
         return content;
     }
-    public Query(String inputContent) throws QueryFormatException{
+    public T getParsedContent() throws ParseException{
+        return contentFactory.createNewInstanse(getContent());
+    }
+    public Query(String inputContent, ParametrizedInstanseFactory<T> contentFactory) throws QueryFormatException{
         initQueryType(inputContent);
         initQueryContent(inputContent);
+        this.contentFactory = contentFactory;
     }
-    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException {
         
     }
 }
-class InsertQuery<T extends FromStringParser<T> & Comparable<T>> extends Query<T>{
-    public InsertQuery(String inputContent) throws QueryFormatException{
-        super(inputContent);
+class InsertQuery<T extends  Comparable<T>> extends Query<T>{
+    public InsertQuery(String inputContent, ParametrizedInstanseFactory<T> contentFactory ) throws QueryFormatException{
+        super(inputContent, contentFactory);
     }   
     @Override
-    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException {
         //we need to create T var from content in query and ask Tree to perform operation
+        tree.executeInsertQuery(getParsedContent());
+        
     }
 }
-class DeleteQuery<T extends FromStringParser<T> & Comparable<T>> extends Query<T>{
-    public DeleteQuery(String inputContent) throws QueryFormatException{
-        super(inputContent);
+class DeleteQuery<T extends  Comparable<T>> extends Query<T>{
+    public DeleteQuery(String inputContent, ParametrizedInstanseFactory<T> contentFactory) throws QueryFormatException{
+        super(inputContent, contentFactory);
     }
     @Override
-    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException {
         tree.executeDeleteQuery();
     }    
 }
-class SearchQuery<T extends  FromStringParser<T> & Comparable<T>> extends Query<T>{
-    public SearchQuery(String inputContent) throws QueryFormatException{
-        super(inputContent);
+class SearchQuery<T extends  Comparable<T>> extends Query<T>{
+    public SearchQuery(String inputContent, ParametrizedInstanseFactory<T> contentFactory) throws QueryFormatException{
+        super(inputContent, contentFactory);
     }
     @Override
-    public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException {
       //  System.out.println(tree.executeSearchQuery(val));
     }    
 }    
-class TraversalQuery<T extends  FromStringParser<T> & Comparable<T>> extends Query<T>{
-    public TraversalQuery(String inputContent) throws QueryFormatException{
-        super(inputContent);
+class TraversalQuery<T extends Comparable<T>> extends Query<T>{
+    public TraversalQuery(String inputContent, ParametrizedInstanseFactory<T> contentFactory) throws QueryFormatException{
+        super(inputContent,  contentFactory);
     }
     @Override
-    public void execute(BinarySearchTree<T> tree) throws QueryFormatException{
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException{
         TraversalFactory<T> factory = new TraversalFactory<>();
         ArrayList<BinarySearchTree<T>.Node> res =  tree.executeTraversalQuery(factory.constructTraversal(getContent())); 
         System.out.println(res);
     }    
 }
 
-class Demonstrator<T extends FromStringParser<T> & Comparable<T>>{
+class Demonstrator<T extends  Comparable<T>, E extends FromStringParser<T>>{
      private final String INPUT_FILE_NAME; 
      private QueryFactory<T> queryFactory;
+     private ParametrizedInstanseFactory<T> contentFactory;
      private Query<T> readQuery(Scanner in) throws QueryFormatException {
-         return queryFactory.constructQuery(in.nextLine());
+         return queryFactory.constructQuery(in.nextLine(),contentFactory);
      }
-     private void processQueries() throws QueryFormatException, FileNotFoundException {
+     private E parser;
+     private void processQueries() throws QueryFormatException, FileNotFoundException, ParseException {
         BinarySearchTree<T> tree = new BinarySearchTree<>();
         Scanner in = new Scanner(new File(INPUT_FILE_NAME)); // here can be File not Found
         while(in.hasNext()){
            readQuery(in).execute(tree); // here can be WrongQueryFormat
         }
     }
-    public Demonstrator(String args[]) throws IOException {
+    public Demonstrator(String args[], E parser) throws IOException {
+        this.parser = parser;
+        contentFactory = new ParametrizedInstanseFactory<>(parser);
         queryFactory = new QueryFactory<>();
         switch (args.length){
             case 0:
@@ -269,11 +277,12 @@ class Demonstrator<T extends FromStringParser<T> & Comparable<T>>{
                 throw new IOException("Wrong console parameter!");
         }
     }
-    public void demonstrateLab() throws QueryFormatException, FileNotFoundException {
+    public void demonstrateLab() throws QueryFormatException, FileNotFoundException, ParseException {
          processQueries();
     }
 }
 public class Lab{
+    
     private static void executeLab(String args[]){
        // Demostrator demostrator = new Demonstrator();
     }
