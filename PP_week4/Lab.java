@@ -2,6 +2,9 @@ import java.text.ParseException;
 import java.util.function.Consumer;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.IOException;
+import java.io.File;
+import java.io.FileNotFoundException;
 class QueryFormatException extends Exception{
     public QueryFormatException(String msg){
         super(msg);
@@ -140,7 +143,7 @@ class QueryFactory <T extends  Parsable & Comparable<T>>{
                 return new DeleteQuery<>(inputContent);
             case "search":
                 return new SearchQuery<>(inputContent);
-            case "bypass":
+            case "traversal":
                 return new TraversalQuery<>(inputContent);
             default:
                 throw new QueryFormatException("Wrong query type!");
@@ -234,29 +237,41 @@ class TraversalQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
 }
 
 class Demonstrator<T extends Parsable & Comparable<T>>{
+     private final String INPUT_FILE_NAME; 
      private QueryFactory<T> queryFactory;
      private Query<T> readQuery(Scanner in) throws QueryFormatException {
          return queryFactory.constructQuery(in.nextLine());
      }
-     private void processQueries() throws QueryFormatException {
+     private void processQueries() throws QueryFormatException, FileNotFoundException {
         BinarySearchTree<T> tree = new BinarySearchTree<>();
-        Scanner in = new Scanner(System.in);
+        Scanner in = new Scanner(new File(INPUT_FILE_NAME)); // here can be File not Found
         while(in.hasNext()){
-           readQuery(in).execute(tree);
+           readQuery(in).execute(tree); // here can be WrongQueryFormat
         }
     }
-    public Demonstrator() {
+    public Demonstrator(String args[]) throws IOException {
         queryFactory = new QueryFactory<>();
+        switch (args.length){
+            case 0:
+                INPUT_FILE_NAME = "input.txt";
+                break;
+            case 1:
+                INPUT_FILE_NAME = args[0];
+                break;
+            default:
+                throw new IOException("Wrong console parameter!");
+        }
     }
-    public void demonstrateLab() throws QueryFormatException {
-        
+    public void demonstrateLab() throws QueryFormatException, FileNotFoundException {
+         processQueries();
     }
 }
 public class Lab{
-    public static void executeLab(){
-        
+    private static void executeLab(String args[]){
+       // Demostrator demostrator = new Demonstrator();
     }
     public static void main(String[] args){    
+        
     }
 }
 
