@@ -10,10 +10,19 @@ class QueryFormatException extends Exception{
         super(msg);
     }
 }
-interface Parsable{
-    void fromString(String source) throws ParseException;
+interface FromStringParser<T>{
+    T fromString(String source) throws ParseException;
 }
-class BinarySearchTree<T extends  Parsable & Comparable<T>>{
+class ParametrizedInstanseFactory<T extends FromStringParser<T> & Comparable<T>>{
+    private final FromStringParser<T> parser;
+    public ParametrizedInstanseFactory(FromStringParser<T> parser){
+        this.parser = parser;
+    }
+    public T createNewInstanse(String source) throws ParseException{
+        return parser.fromString(source);
+    }
+}
+class BinarySearchTree<T extends  FromStringParser<T> & Comparable<T>>{
     // пока что класс пустой просто для примера
     class Node {
         private T key;
@@ -103,10 +112,10 @@ class BinarySearchTree<T extends  Parsable & Comparable<T>>{
     }
     
 }
-interface TraversalStrategy<T extends Parsable & Comparable<T>>{
+interface TraversalStrategy<T extends FromStringParser<T> & Comparable<T>>{
     void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action);
 }
-class LeftRightCurrentTraversal<T extends Parsable & Comparable<T>> implements TraversalStrategy<T>{
+class LeftRightCurrentTraversal<T extends FromStringParser<T> & Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
         if (vertex == null) return;
         traverse(vertex.getLeftChild(), action);
@@ -114,7 +123,7 @@ class LeftRightCurrentTraversal<T extends Parsable & Comparable<T>> implements T
         action.accept(vertex);
     }
 }
-class LeftCurrentRightTraversal<T extends Parsable & Comparable<T>> implements TraversalStrategy<T>{
+class LeftCurrentRightTraversal<T extends FromStringParser<T> & Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
         if (vertex == null) return;
         traverse(vertex.getLeftChild(), action);
@@ -123,7 +132,7 @@ class LeftCurrentRightTraversal<T extends Parsable & Comparable<T>> implements T
     }
 }
 
-class CurrentLeftRightTraversal<T extends  Parsable & Comparable<T>> implements TraversalStrategy<T>{
+class CurrentLeftRightTraversal<T extends  FromStringParser<T> & Comparable<T>> implements TraversalStrategy<T>{
     public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
         if (vertex == null) return;
         action.accept(vertex); 
@@ -133,7 +142,7 @@ class CurrentLeftRightTraversal<T extends  Parsable & Comparable<T>> implements 
 }
 
 
-class QueryFactory <T extends  Parsable & Comparable<T>>{
+class QueryFactory <T extends  FromStringParser<T> & Comparable<T>>{
     public Query<T> constructQuery(String inputContent) throws QueryFormatException{
         Query<T> abstractQuery = new Query<>(inputContent);
         switch (abstractQuery.getType()){
@@ -150,7 +159,7 @@ class QueryFactory <T extends  Parsable & Comparable<T>>{
         }
     }
 }
-class TraversalFactory<T extends Parsable & Comparable<T>>{
+class TraversalFactory<T extends FromStringParser<T> & Comparable<T>>{
     public TraversalStrategy<T> constructTraversal(String inputContent) throws QueryFormatException{
         switch (inputContent){
             case "left-right-vertex":
@@ -164,10 +173,10 @@ class TraversalFactory<T extends Parsable & Comparable<T>>{
         }
     }
 }
-interface BinarySearchTreeCommand<T extends Parsable & Comparable<T>> {
+interface BinarySearchTreeCommand<T extends FromStringParser<T> & Comparable<T>> {
     void execute(BinarySearchTree<T> tree) throws QueryFormatException ;
 }
-class Query<T extends Parsable & Comparable<T>> implements BinarySearchTreeCommand<T>{
+class Query<T extends FromStringParser<T> & Comparable<T>> implements BinarySearchTreeCommand<T>{
     private String content;
     private String type;
     private void initQueryType(String inputContent) throws QueryFormatException{
@@ -195,18 +204,16 @@ class Query<T extends Parsable & Comparable<T>> implements BinarySearchTreeComma
         
     }
 }
-class InsertQuery<T extends Parsable & Comparable<T>> extends Query<T>{
+class InsertQuery<T extends FromStringParser<T> & Comparable<T>> extends Query<T>{
     public InsertQuery(String inputContent) throws QueryFormatException{
         super(inputContent);
     }   
     @Override
     public void execute(BinarySearchTree<T> tree) throws QueryFormatException {
-        //T val;
-        //val.fromString(getContent());
-        //tree.executeInsertQuery(val);
+        //we need to create T var from content in query and ask Tree to perform operation
     }
 }
-class DeleteQuery<T extends Parsable & Comparable<T>> extends Query<T>{
+class DeleteQuery<T extends FromStringParser<T> & Comparable<T>> extends Query<T>{
     public DeleteQuery(String inputContent) throws QueryFormatException{
         super(inputContent);
     }
@@ -215,7 +222,7 @@ class DeleteQuery<T extends Parsable & Comparable<T>> extends Query<T>{
         tree.executeDeleteQuery();
     }    
 }
-class SearchQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
+class SearchQuery<T extends  FromStringParser<T> & Comparable<T>> extends Query<T>{
     public SearchQuery(String inputContent) throws QueryFormatException{
         super(inputContent);
     }
@@ -224,7 +231,7 @@ class SearchQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
       //  System.out.println(tree.executeSearchQuery(val));
     }    
 }    
-class TraversalQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
+class TraversalQuery<T extends  FromStringParser<T> & Comparable<T>> extends Query<T>{
     public TraversalQuery(String inputContent) throws QueryFormatException{
         super(inputContent);
     }
@@ -236,7 +243,7 @@ class TraversalQuery<T extends  Parsable & Comparable<T>> extends Query<T>{
     }    
 }
 
-class Demonstrator<T extends Parsable & Comparable<T>>{
+class Demonstrator<T extends FromStringParser<T> & Comparable<T>>{
      private final String INPUT_FILE_NAME; 
      private QueryFactory<T> queryFactory;
      private Query<T> readQuery(Scanner in) throws QueryFormatException {
