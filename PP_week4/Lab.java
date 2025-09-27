@@ -55,8 +55,16 @@ class BinarySearchTree<T extends  Comparable<T>>{
            deleted = true;
         }
         public void  executeLazyDelete(){
-           if (getLeftChild()!=null && getLeftChild().isDeleted() == true)     setLeftChild(null);
-           if (getRightChild()!=null && getRightChild().isDeleted() == true)     setRightChild(null);
+           if (getLeftChild()!=null && getLeftChild().isDeleted() == true) {
+               if ( getLeftChild().getLeftChild()!=null) {
+                   setLeftChild(getLeftChild().getLeftChild());
+               } else setLeftChild(getLeftChild().getRightChild());
+           };
+           if (getRightChild()!=null && getRightChild().isDeleted() == true) {
+             if (getRightChild().getLeftChild()!=null){
+                 setRightChild(getRightChild().getLeftChild());
+             } else setRightChild(getRightChild().getRightChild());
+           }
  
         }
     }
@@ -77,8 +85,10 @@ class BinarySearchTree<T extends  Comparable<T>>{
             int diff = cur.getKey().compareTo(value);
             if (diff == 0) return;
             if (diff>0){
+                if (cur.getLeftChild() == null) break;
                 cur = cur.getLeftChild();
             } else {
+                if (cur.getRightChild() == null) break;
                 cur = cur.getRightChild();
             }
         }
@@ -106,63 +116,61 @@ class BinarySearchTree<T extends  Comparable<T>>{
         }
         return null;
     }
-    private void  swapKeys(Node a, Node b){
+    private void  swap(Node a, Node b){
         T tempKey = a.key;
         a.key = b.key;
         b.key = tempKey;
     }
     private Node findReplacement(Node node){
         node.executeLazyDelete();
-        if (node.getRightChild() == null) return node;
+        if (node.getRightChild() == null && node.getLeftChild() == null) return node;
+        if (node.getRightChild() == null) return node.getLeftChild();
         node = node.getRightChild();
-        node.executeLazyDelete();
-        while (node.getLeftChild()!=null){
-            node = node.getLeftChild();
-            node.executeLazyDelete();
-        }
+        while (node.getLeftChild()!=null) node = node.getLeftChild();
         return node;
     }
     public void executeDeleteQuery(T value){
         Node toDelete = executeSearchQuery(value);
         if (toDelete == null) return;
         Node replacement = findReplacement(toDelete);
-        swapKeys(toDelete, replacement);
+        swap(toDelete, replacement);
         replacement.setDeleted();
+        if (root.isDeleted()) root = null;
     }
-    public ArrayList<Node> executeTraversalQuery(TraversalStrategy<T> strategy){
-        ArrayList<Node> res = new ArrayList<>();
-        strategy.traverse(root, node -> res.add(node));
+    public ArrayList<T> executeTraversalQuery(TraversalStrategy<T> strategy){
+        ArrayList<T> res = new ArrayList<>();
+        strategy.traverse(root, t -> res.add(t));
         return res;
     }
     
 }
 interface TraversalStrategy<T extends  Comparable<T>>{
-    void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action);
+    void traverse(BinarySearchTree<T>.Node vertex, Consumer<T> action);
 }
 class LeftRightCurrentTraversal<T extends  Comparable<T>> implements TraversalStrategy<T>{
-    public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
+    public void traverse(BinarySearchTree<T>.Node vertex, Consumer<T> action){
         if (vertex == null || vertex.isDeleted()) return;
         vertex.executeLazyDelete();
         traverse(vertex.getLeftChild(), action);
         traverse(vertex.getRightChild(), action);
-        action.accept(vertex);
+        action.accept(vertex.getKey());
     }
 }
 class LeftCurrentRightTraversal<T extends Comparable<T>> implements TraversalStrategy<T>{
-    public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
+    public void traverse(BinarySearchTree<T>.Node vertex, Consumer<T> action){
         if (vertex == null  || vertex.isDeleted()) return;
         vertex.executeLazyDelete();
         traverse(vertex.getLeftChild(), action);
-        action.accept(vertex);
+        action.accept(vertex.getKey());
         traverse(vertex.getRightChild(), action);
     }
 }
 
 class CurrentLeftRightTraversal<T extends   Comparable<T>> implements TraversalStrategy<T>{
-    public void traverse(BinarySearchTree<T>.Node vertex, Consumer<BinarySearchTree<T>.Node> action){
+    public void traverse(BinarySearchTree<T>.Node vertex, Consumer<T> action){
         if (vertex == null || vertex.isDeleted()) return;
         vertex.executeLazyDelete();
-        action.accept(vertex); 
+        action.accept(vertex.getKey()); 
         traverse(vertex.getLeftChild(), action);
         traverse(vertex.getRightChild(), action);
     }
@@ -276,8 +284,8 @@ class TraversalQuery<T extends Comparable<T>> extends Query<T>{
     @Override
     public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException{
         TraversalFactory<T> factory = new TraversalFactory<>();
-        ArrayList<BinarySearchTree<T>.Node> res =  tree.executeTraversalQuery(factory.constructTraversal(getContent())); 
-        System.out.println(res);
+        ArrayList<T> res =  tree.executeTraversalQuery(factory.constructTraversal(getContent())); 
+        System.out.println("Traversal " + getContent() +": " + res);
     }    
 }
 

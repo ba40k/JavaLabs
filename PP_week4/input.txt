@@ -8,3 +8,13 @@ delete 10
 search 5
 search 10
 search 7
+insert 0
+insert -1
+insert -10
+insert -5
+insert -11
+traversal eft-right-vertex
+traversal vertex-left-right
+traversal left-vertex-right
+delete 7
+traversal left-vertex-right
