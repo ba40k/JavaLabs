@@ -12,8 +12,8 @@ insert 0
 insert -1
 insert -10
 insert -5
-insert -11
-traversal eft-right-vertex
+insert -1
+traversal left-right-vertex
 traversal vertex-left-right
 traversal left-vertex-right
 delete 7

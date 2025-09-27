@@ -13,6 +13,9 @@ class QueryFormatException extends Exception{
 interface FromStringParser<T>{
     T fromString(String source) throws ParseException;
 }
+interface Notable{
+    String getNotation();
+}
 class ParametrizedInstanseFactory<T extends Comparable<T>>{
     private final FromStringParser<T> parser;
     public ParametrizedInstanseFactory(FromStringParser<T> parser){
@@ -325,8 +328,12 @@ class Demonstrator<T extends  Comparable<T>, E extends FromStringParser<T>>{
 }
 class IntegerParser implements FromStringParser<Integer>{
     public Integer fromString(String source) throws ParseException{
-        return Integer.parseInt(source);
-    }
+        try{
+            return Integer.parseInt(source);
+        } catch (NumberFormatException e){
+            throw new ParseException("Can't parse value to number!", -1);
+        }
+      }
 }
 public class Lab{
     
