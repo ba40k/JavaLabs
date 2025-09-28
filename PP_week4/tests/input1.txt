@@ -1,0 +1,10 @@
+insert 0
+insert -10
+insert -15
+insert -5
+insert -6
+insert -4
+insert -16
+insert -11
+delete 0
+traversal left-vertex-right

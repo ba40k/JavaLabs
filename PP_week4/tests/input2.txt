@@ -1,0 +1,12 @@
+insert 0
+insert 1
+insert 10
+insert 19
+insert 100
+delete 10
+search 10
+search 0
+search 100
+insert 10
+delete 1
+traversal left-vertex-right

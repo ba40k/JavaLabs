@@ -79,6 +79,7 @@ class BinarySearchTree<T extends  Comparable<T>>{
     public void executeInsertQuery(T value){
         if (root == null  || root.isDeleted()){
             root = new Node(value);
+            return ;
         }
         Node cur = root;
         Node prev = null;
@@ -126,8 +127,7 @@ class BinarySearchTree<T extends  Comparable<T>>{
     }
     private Node findReplacement(Node node){
         node.executeLazyDelete();
-        if (node.getRightChild() == null && node.getLeftChild() == null) return node;
-        if (node.getRightChild() == null) return node.getLeftChild();
+        if (node.getRightChild()==null) return node;
         node = node.getRightChild();
         while (node.getLeftChild()!=null) node = node.getLeftChild();
         return node;
@@ -138,7 +138,7 @@ class BinarySearchTree<T extends  Comparable<T>>{
         Node replacement = findReplacement(toDelete);
         swap(toDelete, replacement);
         replacement.setDeleted();
-        if (root.isDeleted()) root = null;
+        if (root.isDeleted()) root = root.getLeftChild();
     }
     public ArrayList<T> executeTraversalQuery(TraversalStrategy<T> strategy){
         ArrayList<T> res = new ArrayList<>();
@@ -368,8 +368,8 @@ class HumanParser implements FromStringParser<Human>{
 public class Lab{
     
     private static void executeLab(String args[]) throws ParseException, QueryFormatException, FileNotFoundException, IOException{
-       // Demonstrator<Integer, IntegerParser> demonstrator = new Demonstrator<>(args, new IntegerParser());
-        Demonstrator<Human, HumanParser> demonstrator = new Demonstrator<>(args, new HumanParser());
+        Demonstrator<Integer, IntegerParser> demonstrator = new Demonstrator<>(args, new IntegerParser());
+       // Demonstrator<Human, HumanParser> demonstrator = new Demonstrator<>(args, new HumanParser());
         demonstrator.demonstrateLab();
     }
     public static void main(String[] args){    
