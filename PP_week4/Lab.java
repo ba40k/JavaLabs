@@ -403,8 +403,8 @@ class HumanParser implements FromStringParser<Human>{
 public class Lab{
     
     private static void executeLab(String args[]) throws ParseException, QueryFormatException, FileNotFoundException, IOException{
-        Demonstrator<Integer, IntegerParser> demonstrator = new Demonstrator<>(args, new IntegerParser());
-       // Demonstrator<Human, HumanParser> demonstrator = new Demonstrator<>(args, new HumanParser());
+       // Demonstrator<Integer, IntegerParser> demonstrator = new Demonstrator<>(args, new IntegerParser());
+        Demonstrator<Human, HumanParser> demonstrator = new Demonstrator<>(args, new HumanParser());
         demonstrator.demonstrateLab();
     }
     public static void main(String[] args){    
