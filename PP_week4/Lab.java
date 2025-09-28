@@ -145,6 +145,26 @@ class BinarySearchTree<T extends  Comparable<T>>{
         strategy.traverse(root, t -> res.add(t));
         return res;
     }
+    public ArrayList<String> executeVisualizeTreeQuery() {
+        ArrayList<String> res = new ArrayList<>();
+        if (root == null) {
+            res.add("<empty>");
+            return res;
+        }
+        buildAsciiTree(root, "", true, res);
+        return res;
+    }
+    private void buildAsciiTree(Node node, String prefix, boolean isTail, ArrayList<String> out) {
+        if (node == null) return;
+        String mark = node.isDeleted() ? " [del]" : "";
+        out.add(prefix + (isTail ? "└── " : "├── ") + node.getKey() + mark);
+        boolean hasLeft = node.getLeftChild() != null;
+        boolean hasRight = node.getRightChild() != null;
+        if (!hasLeft && !hasRight) return;
+        String childPrefix = prefix + (isTail ? "    " : "│   ");
+        if (hasRight) buildAsciiTree(node.getRightChild(), childPrefix, false, out);
+        if (hasLeft)  buildAsciiTree(node.getLeftChild(),  childPrefix, true,  out);
+    }
     
 }
 interface TraversalStrategy<T extends  Comparable<T>>{
@@ -192,6 +212,8 @@ class QueryFactory <T extends   Comparable<T>>{
                 return new SearchQuery<>(inputContent, contentFactory);
             case "traversal":
                 return new TraversalQuery<>(inputContent, contentFactory);
+            case "visualize":
+                return new VisualizeTreeQuery<>(inputContent, contentFactory);
             default:
                 throw new QueryFormatException("Wrong query type!");
         }
@@ -291,7 +313,20 @@ class TraversalQuery<T extends Comparable<T>> extends Query<T>{
         System.out.println("Traversal " + getContent() +": " + res);
     }    
 }
-
+class VisualizeTreeQuery<T extends Comparable<T>> extends Query<T>{
+    public VisualizeTreeQuery(String inputContent, ParametrizedInstanseFactory<T> contentFactory) throws QueryFormatException{
+        super(inputContent, contentFactory);
+        if (getContent().compareTo("tree") != 0) throw new QueryFormatException("Wrong visualization command!(parameter must be tree)" + "while yours is: " + getContent());
+    }
+    @Override
+    public void execute(BinarySearchTree<T> tree) throws QueryFormatException, ParseException{
+        System.out.println("======Your tree begin======");
+        for (String line : tree.executeVisualizeTreeQuery()){
+            System.out.println(line);
+        }
+        System.out.println("======Your tree end========");
+    }
+}
 class Demonstrator<T extends  Comparable<T>, E extends FromStringParser<T>>{
      private final String INPUT_FILE_NAME; 
      private QueryFactory<T> queryFactory;
@@ -376,13 +411,13 @@ public class Lab{
         try{
             executeLab(args);      
         } catch(ParseException e){
-           System.out.println(e.getMessage());
+           System.err.println(e.getMessage());
         } catch (QueryFormatException e){
-           System.out.println(e.getMessage());
+           System.err.println(e.getMessage());
         } catch (FileNotFoundException e){
-           System.out.println(e.getMessage());
+           System.err.println(e.getMessage());
         } catch (IOException e){
-           System.out.println(e.getMessage());
+           System.err.println(e.getMessage());
         }
     }
 }

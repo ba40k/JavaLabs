@@ -7,3 +7,4 @@ insert 35
 insert 37
 delete 30
 traversal left-vertex-right
+visualize tree
