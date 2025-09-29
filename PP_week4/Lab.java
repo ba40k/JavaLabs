@@ -155,15 +155,17 @@ class BinarySearchTree<T extends  Comparable<T>>{
         return res;
     }
     private void buildAsciiTree(Node node, String prefix, boolean isTail, ArrayList<String> out) {
-        if (node == null) return;
+     
+        if (node == null) {
+            out.add(prefix + (isTail ? "└── " : "├── ") + "null");
+            return;
+        }
+        node.executeLazyDelete();
         String mark = node.isDeleted() ? " [del]" : "";
         out.add(prefix + (isTail ? "└── " : "├── ") + node.getKey() + mark);
-        boolean hasLeft = node.getLeftChild() != null;
-        boolean hasRight = node.getRightChild() != null;
-        if (!hasLeft && !hasRight) return;
         String childPrefix = prefix + (isTail ? "    " : "│   ");
-        if (hasRight) buildAsciiTree(node.getRightChild(), childPrefix, false, out);
-        if (hasLeft)  buildAsciiTree(node.getLeftChild(),  childPrefix, true,  out);
+        buildAsciiTree(node.getRightChild(), childPrefix, false, out);
+        buildAsciiTree(node.getLeftChild(),  childPrefix, true,  out);
     }
     
 }

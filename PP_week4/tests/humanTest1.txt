@@ -6,3 +6,6 @@ insert Ян 13
 delete Андрей 21
 search Андрей 21
 visualize tree
+traversal left-right-vertex
+traversal vertex-left-right
+traversal left-vertex-right
