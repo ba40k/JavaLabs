@@ -9,4 +9,7 @@ search 0
 search 100
 insert 10
 delete 1
+visualize tree
 traversal left-vertex-right
+traversal left-right-vertex
+traversal vertex-left-right

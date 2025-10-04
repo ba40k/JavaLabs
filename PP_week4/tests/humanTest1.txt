@@ -2,7 +2,7 @@ insert Радомир 18
 insert Радомир 19
 insert Вовка 16
 insert Андрей 21
-insert Ян 13
+insert 13
 delete Андрей 21
 search Андрей 21
 visualize tree

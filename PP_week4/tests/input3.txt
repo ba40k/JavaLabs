@@ -5,6 +5,9 @@ insert 20
 insert 40
 insert 35
 insert 37
+visualize tree
 delete 30
 traversal left-vertex-right
+traversal left-right-vertex
+traversal vertex-left-right
 visualize tree
